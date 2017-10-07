@@ -24,6 +24,7 @@ import Data.ByteString.Char8 (pack, ByteString)
 import Data.Pool (Pool, withResource)
 import Control.Monad.Trans.Control
 import Control.Monad.Logger
+import Database.Migration
 
 class HasBackend a where
     getBackend :: a -> Pool SqlBackend
@@ -40,11 +41,6 @@ createConnectionString PostgresConfig{..} =
 
 withPostgresqlPool :: (MonadIO m, MonadLogger m, MonadBaseControl IO m) => PostgresConfig -> Int -> (Pool SqlBackend -> m a) -> m a
 withPostgresqlPool conf n = P.withPostgresqlPool (createConnectionString conf) n
-
-share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Comic
-    name Text
-        |]
 
 type DB r m = (HasBackend r, MonadReader r m, MonadBaseControl IO m, MonadIO m)
 
