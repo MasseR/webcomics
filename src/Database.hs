@@ -10,10 +10,13 @@
 {-# Language FlexibleInstances #-}
 module Database
     ( runMigration
-    , withPostgresqlPool ) where
+    , withPostgresqlPool
+    , insert
+    , selectFirst ) where
 
 import Database.Persist.TH
-import Database.Persist
+import qualified Database.Persist as P
+import Database.Persist (PersistEntity, PersistEntityBackend, Filter, SelectOpt, PersistQueryRead, Entity)
 import Database.Persist.Postgresql (SqlBackend)
 import qualified Database.Persist.Postgresql as P
 import Data.Text (Text)
@@ -43,8 +46,20 @@ withPostgresqlPool :: (MonadIO m, MonadLogger m, MonadBaseControl IO m) => Postg
 withPostgresqlPool conf n = P.withPostgresqlPool (createConnectionString conf) n
 
 type DB r m = (HasBackend r, MonadReader r m, MonadBaseControl IO m, MonadIO m)
+type Record record = (PersistEntityBackend record ~ SqlBackend, PersistEntity record)
 
 runMigration :: DB r m => m ()
 runMigration = do
     pool <- asks getBackend
     withResource pool $ \sql -> runReaderT (P.runMigration migrateAll) sql
+
+insert :: (DB r m, Record record) => record -> m (Key record)
+insert record = do
+    pool <- asks getBackend
+    withResource pool $ \sql -> runReaderT (P.insert record) sql
+
+selectFirst :: (DB r m, Record record) =>
+    [Filter record] -> [SelectOpt record] -> m (Maybe (Entity record))
+selectFirst f s = do
+    pool <- asks getBackend
+    withResource pool $ \sql -> runReaderT (P.selectFirst f s) sql

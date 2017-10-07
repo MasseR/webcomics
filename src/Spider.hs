@@ -6,6 +6,7 @@ import Network.Wreq.Session
 import Network.Wreq (responseBody)
 import Rules
 import Database.Migration (Page(..))
+import Database
 import Control.Monad.Logger
 import Control.Monad.Reader
 import Text.XML (Document)
@@ -16,6 +17,8 @@ import Control.Monad.Trans.Control
 import Control.Concurrent.Lifted (threadDelay)
 import qualified Data.Text as T
 import Lenses
+import Network.URI
+import Data.Monoid
 
 class HasSession a where
     getSession :: a -> Session
@@ -45,7 +48,7 @@ fetchDocument url = do
     r <- liftIO $ get session url
     return $ parseLBS (r ^. responseBody)
 
-spiderPage :: (HasSession r, MonadReader r m, MonadLogger m, MonadIO m, MonadBaseControl IO m) => Rule -> String -> m Page
-spiderPage (Rule c parser) url = do
+parsePage :: (HasSession r, MonadReader r m, MonadLogger m, MonadIO m, MonadBaseControl IO m) => Rule -> String -> m Page
+parsePage (Rule c parser) url = do
     doc <- retry 5 (fetchDocument url)
     return $ parser c doc
