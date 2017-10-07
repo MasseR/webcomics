@@ -14,6 +14,6 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Page
     comic Text
     previous Text Maybe
-    next Text Maybe
     image Text Maybe
+    next Text Maybe
         |]
