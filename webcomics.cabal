@@ -45,3 +45,4 @@ executable webcomics
                      , resource-pool
                      , monad-control
                      , monad-logger
+                     , lifted-base
