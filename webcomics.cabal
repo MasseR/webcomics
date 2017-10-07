@@ -31,3 +31,6 @@ executable webcomics
                      , servant-server
                      , wai
                      , warp
+                     , yaml
+                     , microlens
+                     , microlens-th
