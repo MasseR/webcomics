@@ -1,6 +1,6 @@
 name:                webcomics
 version:             0.1.0.0
--- synopsis:
+synopsis:            Webcomics spider
 -- description:
 homepage:            https://github.com/githubuser/webcomics#readme
 license:             BSD3
