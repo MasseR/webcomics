@@ -20,6 +20,7 @@ executable webcomics
   other-modules:       Database
                      , Database.Migration
                      , Config
+                     , Rules
   build-depends:       base >= 4.7 && < 5
                      , xml-conduit
                      , html-conduit
