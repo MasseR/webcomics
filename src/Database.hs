@@ -6,16 +6,30 @@
 {-# Language GeneralizedNewtypeDeriving #-}
 {-# Language FlexibleContexts #-}
 {-# Language RecordWildCards #-}
-module Database where
+{-# Language ConstraintKinds #-}
+{-# Language FlexibleInstances #-}
+module Database
+    ( runMigration
+    , withPostgresqlPool ) where
 
 import Database.Persist.TH
 import Database.Persist
-import Database.Persist.Postgresql
+import Database.Persist.Postgresql (SqlBackend)
+import qualified Database.Persist.Postgresql as P
 import Data.Text (Text)
 import Control.Monad.Trans
 import Control.Monad.Reader
-import Config (PostgresConfig(..))
+import Config
 import Data.ByteString.Char8 (pack, ByteString)
+import Data.Pool (Pool, withResource)
+import Control.Monad.Trans.Control
+import Control.Monad.Logger
+
+class HasBackend a where
+    getBackend :: a -> Pool SqlBackend
+
+instance HasBackend (Pool SqlBackend) where
+    getBackend = id
 
 createConnectionString :: PostgresConfig -> ByteString
 createConnectionString PostgresConfig{..} =
@@ -24,10 +38,17 @@ createConnectionString PostgresConfig{..} =
                    , "user="++postgresConfigUsername
                    , "password="++postgresConfigPassword]
 
+withPostgresqlPool :: (MonadIO m, MonadLogger m, MonadBaseControl IO m) => PostgresConfig -> Int -> (Pool SqlBackend -> m a) -> m a
+withPostgresqlPool conf n = P.withPostgresqlPool (createConnectionString conf) n
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Comic
     name Text
         |]
 
-dumpMigration :: ReaderT SqlBackend IO ()
-dumpMigration = printMigration migrateAll
+type DB r m = (HasBackend r, MonadReader r m, MonadBaseControl IO m, MonadIO m)
+
+runMigration :: DB r m => m ()
+runMigration = do
+    pool <- asks getBackend
+    withResource pool $ \sql -> runReaderT (P.runMigration migrateAll) sql

@@ -37,3 +37,6 @@ executable webcomics
                      , aeson
                      , microlens
                      , microlens-th
+                     , resource-pool
+                     , monad-control
+                     , monad-logger
