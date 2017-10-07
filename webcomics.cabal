@@ -22,6 +22,8 @@ executable webcomics
                      , html-conduit
                      , wreq
                      , postgresql-simple
+                     , persistent-postgresql
+                     , persistent-template
                      , persistent
                      , mtl
                      , transformers
@@ -32,5 +34,6 @@ executable webcomics
                      , wai
                      , warp
                      , yaml
+                     , aeson
                      , microlens
                      , microlens-th

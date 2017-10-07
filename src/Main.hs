@@ -1,5 +1,10 @@
 module Main where
 
+import Database
+import Config
+
 main :: IO ()
 main = do
-  putStrLn "hello world"
+    config <- readConfig
+    print config
+    putStrLn "hello world"
