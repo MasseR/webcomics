@@ -1,3 +1,4 @@
+{-# Language TemplateHaskell #-}
 module Main where
 
 import Database
@@ -6,6 +7,8 @@ import Lenses
 import Lens.Micro
 import Control.Monad.Logger
 import Control.Monad.Reader
+import Control.Monad (forM_)
+import Rules
 
 main :: IO ()
 main = do

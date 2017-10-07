@@ -12,6 +12,5 @@ import Lens.Micro.TH
 
 makeFields ''PostgresConfig
 makeFields ''Config
-makeFields ''Comic
 makeFields ''Page
 makeFields ''Rule

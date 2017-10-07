@@ -11,10 +11,8 @@ import Database.Persist
 import Data.Text (Text)
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Comic
-    name Text
 Page
-    comic ComicId
+    comic Text
     previous Text Maybe
     next Text Maybe
     image Text Maybe

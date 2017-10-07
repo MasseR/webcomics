@@ -3,11 +3,11 @@ module Rules (rules, Rule(..)) where
 
 import Text.XML (Document, parseText_, def)
 import Text.XML.Cursor
-import Database.Migration (Key, Comic, Page(..))
+import Database.Migration (Key, Page(..))
 import Data.Maybe (listToMaybe)
 import Data.Text (Text)
 
-type Parser = Key Comic -> Document -> Page
+type Parser = Text -> Document -> Page
 
 data Rule = Rule { ruleComic :: Text
                  , ruleParser :: Parser }
