@@ -1,11 +1,13 @@
 {-# Language FlexibleContexts #-}
 {-# Language TemplateHaskell #-}
+{-# Language ConstraintKinds #-}
+{-# Language OverloadedStrings #-}
 module Spider where
 
 import Network.Wreq.Session
 import Network.Wreq (responseBody)
 import Rules
-import Database.Migration (Page(..))
+import Database.Migration (Page(..), EntityField(..))
 import Database
 import Control.Monad.Logger
 import Control.Monad.Reader
@@ -19,12 +21,15 @@ import qualified Data.Text as T
 import Lenses
 import Network.URI
 import Data.Monoid
+import Data.Maybe (isJust)
 
 class HasSession a where
     getSession :: a -> Session
 
 instance HasSession Session where
     getSession = id
+
+type Spider r m = (HasSession r, MonadReader r m, MonadLogger m, MonadIO m, MonadBaseControl IO m)
 
 catchAll :: (MonadBaseControl IO m) => m a -> (SomeException -> m a) -> m a
 catchAll = catch
@@ -42,13 +47,35 @@ retry n f = doRetry baseDelay 0
             threadDelay delay
             doRetry delay (r+1)
 
-fetchDocument :: (HasSession r, MonadReader r m, MonadLogger m, MonadIO m) => String -> m Document
+fetchDocument :: Spider r m => String -> m Document
 fetchDocument url = do
+    $(logInfo) (T.pack $ "Fetching " ++ url)
     session <- asks getSession
     r <- liftIO $ get session url
     return $ parseLBS (r ^. responseBody)
 
-parsePage :: (HasSession r, MonadReader r m, MonadLogger m, MonadIO m, MonadBaseControl IO m) => Rule -> String -> m Page
+parsePage :: Spider r m => Rule -> String -> m Page
 parsePage (Rule c parser) url = do
     doc <- retry 5 (fetchDocument url)
     return $ parser c doc
+
+traverseBack :: (Spider r m, DB r m) => Rule -> m ()
+traverseBack rule@(Rule base _) = go base
+    where
+        true = const True
+        goBack url Nothing = $(logInfo) "No previous url"
+        goBack url (Just previous) = do
+            let previousURI = relativeTo <$> parseURIReference (T.unpack previous) <*> parseURIReference (T.unpack url)
+            case previousURI of
+                 Nothing -> $(logWarn) "Could not parse url"
+                 Just u -> go (T.pack $ show u)
+        go url = do
+            $(logInfo) "Fetching"
+            page <- parsePage rule (T.unpack url)
+            prev <- selectFirst [PagePrevious ==. (page ^. previous)] []
+            next <- selectFirst [PagePrevious ==. (page ^. previous)] []
+            let alreadySeen = maybe False id $ (&&) <$> (fmap true next) <*> (fmap true prev)
+            unless alreadySeen $ do
+                insert page
+                threadDelay (1 * (10^6))
+                goBack url (page ^. previous)

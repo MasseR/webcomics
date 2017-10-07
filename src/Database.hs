@@ -10,12 +10,19 @@
 {-# Language FlexibleInstances #-}
 module Database
     ( runMigration
+    , Pool
+    , SqlBackend
+    , HasBackend(..)
     , withPostgresqlPool
     , insert
-    , selectFirst ) where
+    , selectFirst
+    , DB
+    , Record
+    , (P.==.)) where
 
 import Database.Persist.TH
 import qualified Database.Persist as P
+import qualified Database.Persist as P_EXPORT hiding (insert, selectFirst)
 import Database.Persist (PersistEntity, PersistEntityBackend, Filter, SelectOpt, PersistQueryRead, Entity)
 import Database.Persist.Postgresql (SqlBackend)
 import qualified Database.Persist.Postgresql as P
