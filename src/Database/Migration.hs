@@ -14,8 +14,8 @@ share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Comic
     name Text
 Page
+    comic ComicId
     previous Text Maybe
     next Text Maybe
     image Text Maybe
-    comic ComicId
         |]
