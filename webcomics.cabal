@@ -17,6 +17,9 @@ executable webcomics
   hs-source-dirs:      src
   main-is:             Main.hs
   default-language:    Haskell2010
+  other-modules:       Database
+                     , Database.Migration
+                     , Config
   build-depends:       base >= 4.7 && < 5
                      , xml-conduit
                      , html-conduit
