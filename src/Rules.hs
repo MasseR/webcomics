@@ -20,6 +20,14 @@ xkcd comic doc = Page comic (listToMaybe previous) (listToMaybe img) (listToMayb
         img = cursor $// element "div" >=> "id" `attributeIs` "comic" &/ element "img" >=> attribute "src"
         next = cursor $// element "a" >=> "rel" `attributeIs` "next" >=> attribute "href"
 
+chickenwings :: Parser
+chickenwings comic doc = Page comic (listToMaybe previous) (listToMaybe img) (listToMaybe next)
+    where
+        cursor = fromDocument doc
+        previous = cursor $// element "a" >=> "class" `attributeIs` "navi navi-prev" >=> attribute "href"
+        img = cursor $// element "a" >=> "class" `attributeIs` "tt" &/ element "img" >=> attribute "src"
+        next = cursor $// element "a" >=> "class" `attributeIs` "navi navi-next" >=> attribute "href"
+
 rules :: [Rule]
-rules = [ Rule "https://xkcd.com" xkcd ]
+rules = [ Rule "https://xkcd.com" xkcd, Rule "http://www.chickenwingscomics.com" chickenwings ]
 
